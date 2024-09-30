@@ -5,9 +5,6 @@ const diceResult = document.getElementById('diceResult');
 const playerHealthBar = document.getElementById('playerHealth');
 const aiHealthBar = document.getElementById('aiHealth');
 const betInput = document.getElementById('bet');
-const infoButton = document.getElementById('infoButton');
-const gameInfo = document.getElementById('gameInfo');
-const comboDisplay = document.getElementById('comboDisplay');
 const comboCountElem = document.getElementById('comboCount');
 
 // Ciblage des éléments de l'écran de fin
@@ -37,6 +34,7 @@ function updateCombo(win) {
         consecutiveWins = 0;
         comboCount = 0;
     }
+
     comboCountElem.textContent = comboCount;
 }
 
@@ -65,10 +63,24 @@ function updateHealthBars() {
 function triggerBossFight() {
     bossFightActive = true;
     alert("Boss Fight ! L'IA est enragée et attaque avec des dégâts doublés !");
-    aiHealthBar.classList.add('bg-warning'); // Change la couleur de la barre de vie du boss
+    aiHealthBar.classList.add('bg-warning'); // Change la couleur de la barre de vie du Boss
 }
 
-// Fonction pour réinitialiser le jeu
+// Fonction pour afficher l'écran de fin
+function showEndScreen(playerWon) {
+    const message = playerWon ? "Victoire !" : "Défaite...";
+    const recap = `
+        Nombre de tours : ${totalTurns}<br>
+        Dégâts infligés à l'IA : ${totalDamageToAI}<br>
+        Dégâts subis : ${totalDamageToPlayer}
+    `;
+
+    endMessage.textContent = message;
+    summary.innerHTML = recap;
+    endScreen.classList.remove('d-none');
+}
+
+// Fonction pour redémarrer le jeu
 function restartGame() {
     playerHealth = 100;
     aiHealth = 100;
@@ -76,77 +88,47 @@ function restartGame() {
     totalDamageToAI = 0;
     totalDamageToPlayer = 0;
     comboCount = 0;
-    consecutiveWins = 0;
     bossFightActive = false;
 
     updateHealthBars();
-    comboCountElem.textContent = comboCount;
-    diceResult.textContent = "-";
-
-    // Masquer l'écran de fin et réafficher le jeu
+    comboCountElem.textContent = '0';
+    diceResult.textContent = '-';
     endScreen.classList.add('d-none');
-    rollButton.classList.remove('d-none');
-    dice.classList.remove('d-none');
 }
 
-// Fonction pour afficher l'écran de fin
-function showEndScreen(isVictory) {
-    const resultText = isVictory ? "Victoire !" : "Défaite...";
-    endMessage.textContent = resultText;
-
-    summary.innerHTML = `
-        <p>Nombre total de tours : ${totalTurns}</p>
-        <p>Dégâts totaux infligés à l'IA : ${totalDamageToAI}</p>
-        <p>Dégâts totaux subis : ${totalDamageToPlayer}</p>
-    `;
-
-    // Masquer les éléments de jeu et afficher l'écran de fin
-    endScreen.classList.remove('d-none');
-    rollButton.classList.add('d-none');
-    dice.classList.add('d-none');
-}
-
-// Gestion du clic sur le bouton "Lancer le dé"
+// Gestion du lancer de dé
 rollButton.addEventListener('click', () => {
     const bet = parseInt(betInput.value);
 
-    // Si le pari est valide
-    if (bet > 0 && bet <= 10 && playerHealth > 0 && aiHealth > 0) {
+    if (bet >= 1 && bet <= 10 && playerHealth > 0 && aiHealth > 0) {
         totalTurns++;
-
-        // Ajout de l'animation
         dice.classList.add('dice-rolling');
 
         setTimeout(() => {
-            const playerRoll = rollDice();
-            const aiRoll = rollDice();
+        const playerRoll = rollDice();
+        const aiRoll = rollDice();
 
-            diceResult.textContent = `Joueur : ${playerRoll} | IA : ${aiRoll}`;
+        diceResult.textContent = `Joueur : ${playerRoll} | IA : ${aiRoll}`;
 
-            if (playerRoll > aiRoll) {
-                const damageToAI = bet * (1 + comboCount * 0.5);
-                aiHealth -= damageToAI;
-                totalDamageToAI += damageToAI;
-                updateCombo(true);
-            } else if (aiRoll > playerRoll) {
-                const damageToPlayer = bossFightActive ? bet * 2 : bet;
-                playerHealth -= damageToPlayer;
-                totalDamageToPlayer += damageToPlayer;
-                updateCombo(false);
-            }
+        if (playerRoll > aiRoll) {
+            const damageToAI = bet * (1 + comboCount * 0.5);
+            aiHealth -= damageToAI;
+            totalDamageToAI += damageToAI;
+            updateCombo(true);
+        } else if (aiRoll > playerRoll) {
+            const damageToPlayer = bossFightActive ? bet * 2 : bet;
+            playerHealth -= damageToPlayer;
+            totalDamageToPlayer += damageToPlayer;
+            updateCombo(false);
+        }
 
-            // Mettre à jour les barres de santé
-            updateHealthBars();
-            dice.classList.remove('dice-rolling');
+        // Mettre à jour les barres de santé
+        updateHealthBars();
+        dice.classList.remove('dice-rolling');
         }, 500);
     } else {
         alert("Pari invalide ou jeu terminé !");
     }
-});
-
-// Gérer le clic sur le bouton d'information
-infoButton.addEventListener('click', () => {
-    gameInfo.classList.toggle('d-none');
 });
 
 // Gérer le clic sur le bouton "Recommencer"
